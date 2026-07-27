@@ -38,9 +38,7 @@
     "search_placeholder": "Search country, city or hostname",
     "loading": "Loading relays…",
     "no_results": "No relays match",
-    "expand_tooltip": "Expand",
-    "menu_title": "Servers in {country}",
-    "menu_any": "Any server"
+    "expand_tooltip": "Expand"
   },
   "account": {
     "expired": "Account expired",

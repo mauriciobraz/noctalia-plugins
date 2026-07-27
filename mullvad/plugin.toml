@@ -2,7 +2,7 @@
 
 id = "noctalia/mullvad"
 name = "Mullvad VPN"
-version = "1.1.1"
+version = "1.1.2"
 plugin_api = 9
 author = "noctalia"
 license = "MIT"
@@ -102,14 +102,6 @@ placement = "attached"
 position = "auto"
 open_near_click = true
 
-[[panel]]
-id = "relay-menu"
-entry = "relay-menu.luau"
-width = 320
-height = 420
-placement = "attached"
-position = "auto"
-open_near_click = true
 
 [[service]]
 id = "service"

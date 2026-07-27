@@ -223,15 +223,9 @@ local function relayRow(row)
     onClick = function()
       activateRow(row)
     end,
-    onRightClick = row.kind == "country" and function()
-      noctalia.state.set("mullvad.menuTarget", {
-        countryCode = row.countryCode,
-        countryName = countryName(row.countryCode),
-      })
-      noctalia.togglePanel("noctalia/mullvad:relay-menu")
-    end or (row.canExpand and function()
+    onRightClick = row.canExpand and function()
       toggleExpandRow(row)
-    end or nil),
+    end or nil,
   }, {
     ui.label({
       text = row.label,

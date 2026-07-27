@@ -6,7 +6,7 @@ Control Mullvad VPN from the bar: connect/disconnect, pick relays, toggle lockdo
 
 - ID: `noctalia/mullvad`
 - Widget: `status`
-- Panels: `panel`, `relay-menu`
+- Panel: `panel`
 - Service: `service`
 
 Open the main panel:
@@ -15,15 +15,9 @@ Open the main panel:
 noctalia msg panel-toggle noctalia/mullvad:panel
 ```
 
-Open the relay menu for scripting:
-
-```sh
-noctalia msg panel-toggle noctalia/mullvad:relay-menu
-```
-
 ## Usage
 
-Click the bar widget to open the panel (default) or toggle the connection. Use the panel to switch relays, change quick toggles, and configure advanced Mullvad options. Right-click a country in the relay list to open a compact menu of its servers.
+Click the bar widget to open the panel (default) or toggle the connection. Use the panel to switch relays, change quick toggles, and configure advanced Mullvad options. Right-click a country or city in the relay list to expand it and pick a specific server.
 
 ## Features
 
@@ -31,7 +25,7 @@ Click the bar widget to open the panel (default) or toggle the connection. Use t
 - Status icon in the bar (color-coded by state)
 - Optional country flag, city or IP next to the icon
 - Search-first relay picker with favorites
-- Right-click a country to pick a specific server from a menu
+- Right-click a country or city to expand it and pick a specific server
 - Quick toggles: lockdown mode, auto-connect, LAN sharing
 - Advanced: multihop with entry country, IP protocol
 - Anti-censorship mode and per-method ports
