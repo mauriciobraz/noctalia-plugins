@@ -23,7 +23,7 @@ Click the bar widget to open the panel (default) or toggle the connection. Use t
 
 - Connect / disconnect / reconnect with one click
 - Status icon in the bar (color-coded by state)
-- Optional country flag, city or IP next to the icon
+- Optional country flag, city or IP (with live ping when connected) next to the icon
 - Search-first relay picker with favorites
 - Click the chevron next to a country or city to expand it and pick a specific server
 - Quick toggles: lockdown mode, auto-connect, LAN sharing

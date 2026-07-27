@@ -72,7 +72,11 @@ local function render()
       tooltip = tooltip .. "\n" .. location.hostname
     end
     if location.ipv4 ~= "" then
-      tooltip = tooltip .. "\n" .. location.ipv4
+      local ipLine = location.ipv4
+      if type(currentStatus.ping) == "number" then
+        ipLine = ipLine .. " / " .. tostring(math.floor(currentStatus.ping)) .. " ms"
+      end
+      tooltip = tooltip .. "\n" .. ipLine
     end
   elseif locked then
     tooltip = noctalia.tr("state.blocked")

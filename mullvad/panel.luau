@@ -268,6 +268,7 @@ local function buildRelayRows()
         table.insert(rows, ui.row({
           gap = 8,
           align = "center",
+          justify = "space_between",
           padding = 8,
           fill = hostCurrent and "primary" or nil,
           onClick = function()
@@ -275,9 +276,12 @@ local function buildRelayRows()
           end,
         }, {
           ui.label({
-            text = "    " .. host.name .. "  " .. host.ipv4,
+            text = "    " .. host.name,
             color = hostCurrent and "on_primary" or "on_surface",
-            flexGrow = 1,
+          }),
+          ui.label({
+            text = host.ipv4,
+            color = hostCurrent and "on_primary" or "on_surface_variant",
           }),
         }))
       end
@@ -358,7 +362,12 @@ local function headerSection()
 
   local ipText = ""
   if location and location.ipv4 ~= "" then
-    ipText = location.ipv4
+    local ping = currentStatus.ping
+    if type(ping) == "number" then
+      ipText = location.ipv4 .. " / " .. tostring(math.floor(ping)) .. " ms"
+    else
+      ipText = location.ipv4
+    end
   end
 
   local buttonText
@@ -429,11 +438,11 @@ local function headerSection()
     }))
   end
 
-  return groupBox(children)
+  return ui.column({ gap = 12, align = "stretch" }, children)
 end
 
 local function togglesSection()
-  return groupBox({
+  return ui.column({ gap = 12, align = "stretch" }, {
     toggleRow("toggles.lockdown", currentStatus.lockdownMode, "onLockdown"),
     toggleRow("toggles.auto_connect", currentStatus.autoConnect, "onAutoConnect"),
     toggleRow("toggles.lan", currentStatus.lanSharing == "allow", "onLan"),
@@ -622,10 +631,10 @@ function render()
   }, {
     headerSection(),
     togglesSection(),
-    relaySection(),
     advancedSection(),
     antiCensorshipSection(),
     dnsSection(),
+    relaySection(),
   }))
 end
 

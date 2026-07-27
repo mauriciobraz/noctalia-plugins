@@ -10,8 +10,8 @@
 [[plugin]]
 id = "noctalia/mullvad"
 name = "Mullvad VPN"
-version = "1.1.4"
-updated_at = 1785185843
+version = "1.1.5"
+updated_at = 1785186640
 added_at = 1785178739
 author = "noctalia"
 license = "MIT"

@@ -8,9 +8,12 @@
 local DEFAULT_REFRESH_INTERVAL = 3000
 local ACCOUNT_INTERVAL_TICKS = 100
 local TOGGLES_INTERVAL_TICKS = 10
+local PING_INTERVAL_TICKS = 3
 
 local tickCount = 0
 local statusInFlight = false
+local pingInFlight = false
+local lastPingIp = ""
 
 local status = {
   installed = false,
@@ -30,6 +33,7 @@ local status = {
   relayList = {},
   relayListReady = false,
   favoriteCountries = {},
+  ping = nil,
   antiCensorship = {
     mode = "auto",
     udp2tcpPort = "any",
@@ -90,6 +94,7 @@ local function publish()
     favoriteCountries = status.favoriteCountries,
     antiCensorship = status.antiCensorship,
     dns = status.dns,
+    ping = status.ping,
   })
 end
 
@@ -231,6 +236,37 @@ local function scheduleStatusRefresh()
       updateStatus()
     end
   end)
+end
+
+local function refreshPing()
+  local ip = status.location and status.location.ipv4
+  if status.state ~= "connected" or not ip or ip == "" then
+    status.ping = nil
+    lastPingIp = ""
+    return
+  end
+  if pingInFlight then
+    return
+  end
+  local shouldPing = ip ~= lastPingIp or tickCount % PING_INTERVAL_TICKS == 0
+  if not shouldPing then
+    return
+  end
+  pingInFlight = true
+  lastPingIp = ip
+  noctalia.runAsync("ping -c 1 -W 1 " .. shellQuote(ip), function(result)
+    pingInFlight = false
+    if result and result.exitCode == 0 then
+      local ms = tostring(result.stdout):match("time=(%d+%.?%d*)")
+      if ms then
+        status.ping = tonumber(ms)
+        publish()
+      end
+    else
+      status.ping = nil
+      publish()
+    end
+  end, 2000)
 end
 
 -- ── Relay selection ──
@@ -772,6 +808,7 @@ function update()
   end
 
   updateStatus()
+  refreshPing()
   if tickCount % TOGGLES_INTERVAL_TICKS == 0 then
     refreshTogglesState()
     refreshRelaySelection()
