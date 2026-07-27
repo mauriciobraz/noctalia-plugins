@@ -471,7 +471,7 @@ local function relaySection()
       variant = "outline",
       onClick = "onAutoSelect",
     }),
-    ui.scroll({ height = 240, align = "stretch" }, buildRelayRows()),
+    ui.column({ gap = 4, align = "stretch" }, buildRelayRows()),
   })
 end
 
@@ -624,17 +624,19 @@ end
 -- ── Render ──
 
 function render()
-  panel.render(ui.column({
-    gap = 16,
-    align = "stretch",
-    padding = 12,
-  }, {
-    headerSection(),
-    togglesSection(),
-    advancedSection(),
-    antiCensorshipSection(),
-    dnsSection(),
-    relaySection(),
+  panel.render(ui.scroll({ flexGrow = 1, align = "stretch" }, {
+    ui.column({
+      gap = 16,
+      align = "stretch",
+      padding = 12,
+    }, {
+      headerSection(),
+      togglesSection(),
+      advancedSection(),
+      antiCensorshipSection(),
+      dnsSection(),
+      relaySection(),
+    }),
   }))
 end
 
