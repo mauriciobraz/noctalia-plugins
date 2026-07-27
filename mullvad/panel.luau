@@ -59,13 +59,23 @@ local function statusColor()
 end
 
 local function groupBox(children)
-  return ui.box({ fill = "surface_variant/0.4", radius = 8, padding = 12 }, {
-    ui.column({ gap = 12, align = "stretch" }, children),
-  })
+  -- ui.box does NOT support padding or children, so use ui.column as the
+  -- background container. column/row support fill, radius, padding and gap.
+  return ui.column({
+    gap = 12,
+    align = "stretch",
+    fill = "surface_variant/0.4",
+    radius = 8,
+    padding = 12,
+  }, children)
 end
 
 local function toggleRow(labelKey, checked, callback)
-  return ui.row({ gap = 12, align = "center", justify = "space_between" }, {
+  return ui.row({
+    gap = 12,
+    align = "center",
+    justify = "space_between",
+  }, {
     ui.label({ text = noctalia.tr(labelKey), color = "on_surface" }),
     ui.toggle({ checked = checked == true, onChange = callback }),
   })
@@ -170,9 +180,6 @@ local function buildRelayRows()
       onClick = function()
         activateRow(country.code, "", "")
       end,
-      onRightClick = function()
-        toggleExpandRow("country", country.code)
-      end,
     }, {
       ui.label({
         text = flagEmoji(country.code) .. " " .. country.country,
@@ -185,14 +192,16 @@ local function buildRelayRows()
           color = isCurrent and "on_primary" or "on_surface_variant",
         })
         else ui.box({ width = 0 }),
-      ui.button({
-        glyph = expandGlyph,
-        variant = "ghost",
-        tooltip = noctalia.tr("relay.expand_tooltip"),
-        onClick = function()
-          toggleExpandRow("country", country.code)
-        end,
-      }),
+      if totalHosts > 0
+        then ui.button({
+          glyph = expandGlyph,
+          variant = "ghost",
+          tooltip = noctalia.tr("relay.expand_tooltip"),
+          onClick = function()
+            toggleExpandRow("country", country.code)
+          end,
+        })
+        else ui.box({ width = 0 }),
     }))
 
     if not countryExpanded and query == "" then
@@ -222,9 +231,6 @@ local function buildRelayRows()
         fill = cityCurrent and "primary" or nil,
         onClick = function()
           activateRow(country.code, city.code, "")
-        end,
-        onRightClick = function()
-          toggleExpandRow("city", country.code, city.code)
         end,
       }, {
         ui.label({
@@ -366,7 +372,7 @@ local function headerSection()
 
   local children = {
     ui.row({ gap = 12, align = "center" }, {
-      ui.glyph({ name = installed and "shield" or "shield-off", color = statusColor(), fontSize = 32 }),
+      ui.glyph({ name = installed and "shield" or "shield-off", size = 32, color = statusColor() }),
       ui.column({ gap = 4, flexGrow = 1, align = "stretch" }, {
         ui.label({ text = stateText, fontSize = 16, fontWeight = "bold", color = "on_surface" }),
         ui.label({ text = table.concat(details, " · "), color = "on_surface_variant" }),
@@ -413,8 +419,13 @@ local function headerSection()
     local text = if days <= 0
       then noctalia.tr("account.expired")
       else noctalia.tr("account.expires_in", { days = days })
-    table.insert(children, ui.box({ fill = "error", radius = 8, padding = 10 }, {
-      ui.label({ text = text, color = "on_error", wrap = true }),
+    table.insert(children, ui.column({
+      fill = "error",
+      radius = 8,
+      padding = 10,
+      align = "stretch",
+    }, {
+      ui.label({ text = text, color = "on_error" }),
     }))
   end
 
@@ -604,7 +615,11 @@ end
 -- ── Render ──
 
 function render()
-  panel.render(ui.column({ gap = 16, align = "stretch", padding = 12 }, {
+  panel.render(ui.column({
+    gap = 16,
+    align = "stretch",
+    padding = 12,
+  }, {
     headerSection(),
     togglesSection(),
     relaySection(),

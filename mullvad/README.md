@@ -17,7 +17,7 @@ noctalia msg panel-toggle noctalia/mullvad:panel
 
 ## Usage
 
-Click the bar widget to open the panel (default) or toggle the connection. Use the panel to switch relays, change quick toggles, and configure advanced Mullvad options. Right-click a country or city in the relay list to expand it and pick a specific server.
+Click the bar widget to open the panel (default) or toggle the connection. Use the panel to switch relays, change quick toggles, and configure advanced Mullvad options. Click the chevron next to a country or city in the relay list to expand it and pick a specific server.
 
 ## Features
 
@@ -25,7 +25,7 @@ Click the bar widget to open the panel (default) or toggle the connection. Use t
 - Status icon in the bar (color-coded by state)
 - Optional country flag, city or IP next to the icon
 - Search-first relay picker with favorites
-- Right-click a country or city to expand it and pick a specific server
+- Click the chevron next to a country or city to expand it and pick a specific server
 - Quick toggles: lockdown mode, auto-connect, LAN sharing
 - Advanced: multihop with entry country, IP protocol
 - Anti-censorship mode and per-method ports
