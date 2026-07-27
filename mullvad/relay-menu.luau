@@ -91,7 +91,7 @@ function render()
     }))
   end
 
-  panel.render(ui.column({ flexGrow = 1, gap = 4, align = "stretch" }, {
+  panel.render(ui.column({ gap = 4, align = "stretch" }, {
     ui.scroll({ flexGrow = 1, align = "stretch" }, rows),
   }))
 end

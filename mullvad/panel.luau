@@ -523,9 +523,10 @@ local antiCensorshipModeLabels = {
 }
 
 local function antiCensorshipModeSelect()
+  local mode = (currentStatus.antiCensorship or {}).mode or "auto"
   local selectedIndex = 0
   for i, m in ipairs(antiCensorshipModes) do
-    if m == currentStatus.antiCensorship.mode then
+    if m == mode then
       selectedIndex = i - 1
       break
     end
@@ -613,7 +614,7 @@ end
 
 -- ── Render ──
 
-function render()
+local function buildUi()
   updateSelectOptions()
 
   local ac = currentStatus.antiCensorship or {}
@@ -634,7 +635,7 @@ function render()
     dnsServersInput = dns.addresses
   end
 
-  panel.render(ui.column({ flexGrow = 1, gap = 16, align = "stretch" }, {
+  panel.render(ui.column({ gap = 16, align = "stretch" }, {
     ui.scroll({ flexGrow = 1, gap = 16, align = "stretch" }, {
       headerSection(),
       togglesSection(),
@@ -644,6 +645,17 @@ function render()
       dnsSection(),
     }),
   }))
+end
+
+function render()
+  local ok, err = pcall(buildUi)
+  if not ok then
+    noctalia.log("mullvad panel render error: " .. tostring(err))
+    panel.render(ui.column({ flexGrow = 1, gap = 12, align = "stretch", padding = 16 }, {
+      ui.label({ text = "Mullvad panel error", fontWeight = "bold", color = "error" }),
+      ui.label({ text = tostring(err), color = "on_surface", wrap = true }),
+    }))
+  end
 end
 
 -- ── Callbacks ──
