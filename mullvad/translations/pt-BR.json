@@ -1,0 +1,118 @@
+{
+  "title": "Mullvad VPN",
+  "state": {
+    "not_installed": "CLI do Mullvad não encontrada",
+    "error": "Erro",
+    "connected": "Conectado",
+    "connecting": "Conectando",
+    "disconnecting": "Desconectando",
+    "disconnected": "Desconectado",
+    "blocked": "Bloqueio: tráfego bloqueado"
+  },
+  "action": {
+    "connect": "Conectar",
+    "disconnect": "Desconectar",
+    "cancel": "Cancelar",
+    "reconnect": "Reconectar",
+    "auto_select": "Selecionar relay automaticamente",
+    "refresh_relays": "Atualizar lista de relays",
+    "open_panel": "Abrir painel"
+  },
+  "badges": {
+    "multihop": "Multihop",
+    "multihop_via": "Multihop via {country}",
+    "ip_version": "IPv{version}",
+    "lockdown": "Bloqueio",
+    "auto_connect": "Conexão automática",
+    "lan_blocked": "LAN bloqueada"
+  },
+  "toggles": {
+    "lockdown": "Modo de bloqueio",
+    "lockdown_tooltip": "Bloqueia todo o tráfego quando desconectado",
+    "auto_connect": "Conectar automaticamente",
+    "auto_connect_tooltip": "Conecta automaticamente quando o daemon inicia",
+    "lan": "Compartilhamento de rede local",
+    "lan_tooltip": "Permite tráfego para outros dispositivos na rede local"
+  },
+  "relay": {
+    "search_placeholder": "Buscar país, cidade ou hostname",
+    "loading": "Carregando relays…",
+    "no_results": "Nenhum relay encontrado"
+  },
+  "account": {
+    "expired": "Conta expirada",
+    "expires_in": "Conta expira em {days} dias"
+  },
+  "advanced": {
+    "show": "Avançado",
+    "hide": "Avançado",
+    "multihop": "Multihop",
+    "multihop_tooltip": "Roteia o tráfego por dois servidores",
+    "multihop_entry": "País de entrada do multihop",
+    "ip_version": "Protocolo IP",
+    "ip_version_any": "Qualquer",
+    "ip_version_v4": "IPv4",
+    "ip_version_v6": "IPv6"
+  },
+  "confirm": {
+    "lockdown_disconnect": "O modo de bloqueio está ativo. Desconectar mesmo assim?",
+    "confirm": "Desconectar",
+    "cancel": "Cancelar"
+  },
+  "toast": {
+    "title": "Mullvad VPN",
+    "connected": "Conectado",
+    "connect_failed": "Falha ao conectar",
+    "disconnected": "Desconectado",
+    "lockdown_on": "Modo de bloqueio ativado",
+    "lockdown_off": "Modo de bloqueio desativado"
+  },
+  "settings": {
+    "refresh_interval": {
+      "label": "Intervalo de atualização (ms)",
+      "description": "Com que frequência consultar o status do Mullvad"
+    },
+    "show_country_flag": {
+      "label": "Mostrar bandeira do país",
+      "description": "Mostra um emoji de bandeira no widget da barra"
+    },
+    "show_city_name": {
+      "label": "Mostrar nome da cidade",
+      "description": "Mostra a cidade do relay ao lado do ícone"
+    },
+    "show_ip": {
+      "label": "Mostrar endereço IP",
+      "description": "Mostra o IP atual ao lado do ícone"
+    },
+    "compact_mode": {
+      "label": "Modo compacto",
+      "description": "Apenas o ícone, sem adornos"
+    },
+    "click_action": {
+      "label": "Ação do clique",
+      "description": "O que fazer ao clicar no widget da barra"
+    },
+    "click_action_toggle": {
+      "label": "Alternar conexão"
+    },
+    "click_action_panel": {
+      "label": "Abrir painel"
+    },
+    "relay_click_connects": {
+      "label": "Clique no relay conecta",
+      "description": "Selecionar um relay no painel conecta imediatamente"
+    },
+    "confirm_disconnect_in_lockdown": {
+      "label": "Confirmar desconexão no bloqueio",
+      "description": "Perguntar antes de desconectar enquanto o modo de bloqueio está ativo"
+    },
+    "favorite_countries": {
+      "label": "Países favoritos",
+      "description": "Códigos de país de 2 letras separados por vírgula, fixados no topo do seletor de relays"
+    },
+    "expiry_warning_days": {
+      "label": "Aviso de expiração (dias)",
+      "description": "Mostrar um aviso quando a conta expirar em até este número de dias"
+    }
+  }
+}

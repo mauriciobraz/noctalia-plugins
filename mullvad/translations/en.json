@@ -1,0 +1,118 @@
+{
+  "title": "Mullvad VPN",
+  "state": {
+    "not_installed": "Mullvad CLI not found",
+    "error": "Error",
+    "connected": "Connected",
+    "connecting": "Connecting",
+    "disconnecting": "Disconnecting",
+    "disconnected": "Disconnected",
+    "blocked": "Lockdown: traffic blocked"
+  },
+  "action": {
+    "connect": "Connect",
+    "disconnect": "Disconnect",
+    "cancel": "Cancel",
+    "reconnect": "Reconnect",
+    "auto_select": "Auto-select relay",
+    "refresh_relays": "Refresh relay list",
+    "open_panel": "Open panel"
+  },
+  "badges": {
+    "multihop": "Multihop",
+    "multihop_via": "Multihop via {country}",
+    "ip_version": "IPv{version}",
+    "lockdown": "Lockdown",
+    "auto_connect": "Auto-connect",
+    "lan_blocked": "LAN blocked"
+  },
+  "toggles": {
+    "lockdown": "Lockdown mode",
+    "lockdown_tooltip": "Block all traffic when disconnected",
+    "auto_connect": "Auto-connect",
+    "auto_connect_tooltip": "Connect automatically when the daemon starts",
+    "lan": "Local network sharing",
+    "lan_tooltip": "Allow traffic to other devices on the local network"
+  },
+  "relay": {
+    "search_placeholder": "Search country, city or hostname",
+    "loading": "Loading relays…",
+    "no_results": "No relays match"
+  },
+  "account": {
+    "expired": "Account expired",
+    "expires_in": "Account expires in {days} days"
+  },
+  "advanced": {
+    "show": "Advanced",
+    "hide": "Advanced",
+    "multihop": "Multihop",
+    "multihop_tooltip": "Route traffic through two servers",
+    "multihop_entry": "Multihop entry country",
+    "ip_version": "IP protocol",
+    "ip_version_any": "Any",
+    "ip_version_v4": "IPv4",
+    "ip_version_v6": "IPv6"
+  },
+  "confirm": {
+    "lockdown_disconnect": "Lockdown mode is on. Disconnect anyway?",
+    "confirm": "Disconnect",
+    "cancel": "Cancel"
+  },
+  "toast": {
+    "title": "Mullvad VPN",
+    "connected": "Connected",
+    "connect_failed": "Connection failed",
+    "disconnected": "Disconnected",
+    "lockdown_on": "Lockdown mode enabled",
+    "lockdown_off": "Lockdown mode disabled"
+  },
+  "settings": {
+    "refresh_interval": {
+      "label": "Refresh interval (ms)",
+      "description": "How often to poll Mullvad status"
+    },
+    "show_country_flag": {
+      "label": "Show country flag",
+      "description": "Show a flag emoji in the bar widget"
+    },
+    "show_city_name": {
+      "label": "Show city name",
+      "description": "Show the relay city next to the icon"
+    },
+    "show_ip": {
+      "label": "Show IP address",
+      "description": "Show the current IP next to the icon"
+    },
+    "compact_mode": {
+      "label": "Compact mode",
+      "description": "Icon only, no adornments"
+    },
+    "click_action": {
+      "label": "Click action",
+      "description": "What to do when the bar widget is clicked"
+    },
+    "click_action_toggle": {
+      "label": "Toggle connection"
+    },
+    "click_action_panel": {
+      "label": "Open panel"
+    },
+    "relay_click_connects": {
+      "label": "Relay click connects",
+      "description": "Selecting a relay in the panel connects immediately"
+    },
+    "confirm_disconnect_in_lockdown": {
+      "label": "Confirm disconnect in lockdown",
+      "description": "Ask before disconnecting while lockdown mode is active"
+    },
+    "favorite_countries": {
+      "label": "Favorite countries",
+      "description": "Comma-separated 2-letter country codes pinned to the top of the relay picker"
+    },
+    "expiry_warning_days": {
+      "label": "Expiry warning (days)",
+      "description": "Show a warning when the account expires within this many days"
+    }
+  }
+}

@@ -1,0 +1,19 @@
+/.github/workflows/__pycache__
+
+# Plugin runtime data
+*/settings.json
+
+# IDE / editor
+.vscode/
+.zed/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+examples/
+.gitmodules

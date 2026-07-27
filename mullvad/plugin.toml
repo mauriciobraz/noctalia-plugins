@@ -1,0 +1,106 @@
+# Mullvad VPN controller: bar widget, relay picker panel and quick toggles.
+
+id = "noctalia/mullvad"
+name = "Mullvad VPN"
+version = "1.0.0"
+plugin_api = 9
+author = "noctalia"
+license = "MIT"
+dependencies = []
+tags = ["network", "privacy", "utility"]
+icon = "shield"
+description = "Control Mullvad VPN from the bar: connect, disconnect, pick relays and toggle lockdown mode."
+
+[[setting]]
+key = "refresh_interval"
+type = "int"
+label_key = "settings.refresh_interval.label"
+description_key = "settings.refresh_interval.description"
+default = 3000
+min = 1000
+max = 60000
+
+[[setting]]
+key = "show_country_flag"
+type = "bool"
+label_key = "settings.show_country_flag.label"
+description_key = "settings.show_country_flag.description"
+default = true
+
+[[setting]]
+key = "show_city_name"
+type = "bool"
+label_key = "settings.show_city_name.label"
+description_key = "settings.show_city_name.description"
+default = false
+
+[[setting]]
+key = "show_ip"
+type = "bool"
+label_key = "settings.show_ip.label"
+description_key = "settings.show_ip.description"
+default = false
+
+[[setting]]
+key = "compact_mode"
+type = "bool"
+label_key = "settings.compact_mode.label"
+description_key = "settings.compact_mode.description"
+default = false
+
+[[setting]]
+key = "click_action"
+type = "select"
+label_key = "settings.click_action.label"
+description_key = "settings.click_action.description"
+default = "toggle"
+options = [
+  { value = "toggle", label_key = "settings.click_action_toggle.label" },
+  { value = "panel", label_key = "settings.click_action_panel.label" },
+]
+
+[[setting]]
+key = "relay_click_connects"
+type = "bool"
+label_key = "settings.relay_click_connects.label"
+description_key = "settings.relay_click_connects.description"
+default = true
+
+[[setting]]
+key = "confirm_disconnect_in_lockdown"
+type = "bool"
+label_key = "settings.confirm_disconnect_in_lockdown.label"
+description_key = "settings.confirm_disconnect_in_lockdown.description"
+default = true
+
+[[setting]]
+key = "favorite_countries"
+type = "string"
+label_key = "settings.favorite_countries.label"
+description_key = "settings.favorite_countries.description"
+default = ""
+
+[[setting]]
+key = "expiry_warning_days"
+type = "int"
+label_key = "settings.expiry_warning_days.label"
+description_key = "settings.expiry_warning_days.description"
+default = 7
+min = 0
+max = 90
+
+[[widget]]
+id = "status"
+entry = "widget.luau"
+
+[[panel]]
+id = "panel"
+entry = "panel.luau"
+width = 420
+height = 560
+placement = "floating"
+position = "center"
+
+[[service]]
+id = "service"
+entry = "service.luau"
