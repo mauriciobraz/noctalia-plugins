@@ -10,6 +10,13 @@ local searchInputKey = 0
 local advancedExpanded = false
 local confirmDisconnect = false
 
+local expandedCountries = {}
+local expandedCities = {}
+
+local antiCensorshipInputs = { udp2tcp = "", shadowsocks = "", wireguard = "", lwo = "" }
+local dnsServersInput = ""
+local dnsCustomDraft = false
+
 -- Populated during render so the global select callbacks can map indices back
 -- to values without capturing state in closures.
 local entryOptions = {}
@@ -57,22 +64,23 @@ end
 
 local function buildRows()
   local query = noctalia.string.trim(searchQuery):lower()
+  local searching = query ~= ""
   local rl = currentStatus.relayList or {}
   local fav = currentStatus.favoriteCountries or {}
   local sel = currentStatus.relaySelection or { country = "", city = "", hostname = "" }
 
   local function matches(country, city, host)
-    if query == "" then
-      return true
+    if searching then
+      local hay = country.country .. " " .. country.code
+      if city then
+        hay = hay .. " " .. city.city .. " " .. city.code
+      end
+      if host then
+        hay = hay .. " " .. host.name
+      end
+      return string.find(hay:lower(), query, 1, true) ~= nil
     end
-    local hay = country.country .. " " .. country.code
-    if city then
-      hay = hay .. " " .. city.city .. " " .. city.code
-    end
-    if host then
-      hay = hay .. " " .. host.name
-    end
-    return string.find(hay:lower(), query, 1, true) ~= nil
+    return true
   end
 
   local ordered = {}
@@ -90,27 +98,21 @@ local function buildRows()
 
   local rows = {}
   for _, c in ipairs(ordered) do
+    local countryExpanded = expandedCountries[c.code] == true
     local countryMatches = matches(c, nil, nil)
     local cityMatches = false
     local hostMatches = false
     for _, ci in ipairs(c.cities) do
       if matches(c, ci, nil) then
         cityMatches = true
-        break
       end
-    end
-    for _, ci in ipairs(c.cities) do
       for _, h in ipairs(ci.hostnames) do
         if matches(c, ci, h) then
           hostMatches = true
-          break
         end
       end
-      if hostMatches then
-        break
-      end
     end
-    if not countryMatches and not cityMatches and not hostMatches then
+    if not countryMatches and not cityMatches and not hostMatches and not countryExpanded then
       continue
     end
 
@@ -126,21 +128,24 @@ local function buildRows()
       hostname = "",
       isCurrent = sel.country == c.code and sel.city == "",
       count = totalHosts,
+      expanded = countryExpanded,
+      canExpand = true,
     })
 
-    if query == "" then
+    if not searching and not countryExpanded then
       continue
     end
 
     for _, ci in ipairs(c.cities) do
+      local cityKey = c.code .. ":" .. ci.code
+      local cityExpanded = expandedCities[cityKey] == true
       local cityHostMatches = false
       for _, h in ipairs(ci.hostnames) do
         if matches(c, ci, h) then
           cityHostMatches = true
-          break
         end
       end
-      if not matches(c, ci, nil) and not cityHostMatches then
+      if not matches(c, ci, nil) and not cityHostMatches and not cityExpanded then
         continue
       end
 
@@ -152,10 +157,16 @@ local function buildRows()
         hostname = "",
         isCurrent = sel.country == c.code and sel.city == ci.code and sel.hostname == "",
         count = #ci.hostnames,
+        expanded = cityExpanded,
+        canExpand = true,
       })
 
+      if not searching and not cityExpanded then
+        continue
+      end
+
       for _, h in ipairs(ci.hostnames) do
-        if not matches(c, ci, h) then
+        if searching and not matches(c, ci, h) then
           continue
         end
         table.insert(rows, {
@@ -166,6 +177,7 @@ local function buildRows()
           hostname = h.name,
           isCurrent = sel.hostname == h.name,
           count = 0,
+          canExpand = false,
         })
       end
     end
@@ -183,7 +195,26 @@ local function activateRow(row)
   })
 end
 
+local function toggleExpandRow(row)
+  if row.kind == "country" then
+    if expandedCountries[row.countryCode] then
+      expandedCountries[row.countryCode] = nil
+    else
+      expandedCountries[row.countryCode] = true
+    end
+  elseif row.kind == "city" then
+    local key = row.countryCode .. ":" .. row.cityCode
+    if expandedCities[key] then
+      expandedCities[key] = nil
+    else
+      expandedCities[key] = true
+    end
+  end
+  render()
+end
+
 local function relayRow(row)
+  local expandGlyph = row.expanded and "chevron-up" or "chevron-down"
   return ui.row({
     gap = 8,
     align = "center",
@@ -192,6 +223,15 @@ local function relayRow(row)
     onClick = function()
       activateRow(row)
     end,
+    onRightClick = row.kind == "country" and function()
+      noctalia.state.set("mullvad.menuTarget", {
+        countryCode = row.countryCode,
+        countryName = countryName(row.countryCode),
+      })
+      noctalia.togglePanel("noctalia/mullvad:relay-menu")
+    end or (row.canExpand and function()
+      toggleExpandRow(row)
+    end or nil),
   }, {
     ui.label({
       text = row.label,
@@ -200,6 +240,16 @@ local function relayRow(row)
     }),
     if row.count and row.count > 0
       then ui.label({ text = tostring(row.count), color = row.isCurrent and "on_primary" or "on_surface_variant" })
+      else ui.box({ width = 0 }),
+    if row.canExpand
+      then ui.button({
+        glyph = expandGlyph,
+        variant = "ghost",
+        tooltip = noctalia.tr("relay.expand_tooltip"),
+        onClick = function()
+          toggleExpandRow(row)
+        end,
+      })
       else ui.box({ width = 0 }),
   })
 end
@@ -216,7 +266,9 @@ local function expiryBanner()
   if not installed or days > threshold then
     return ui.box({ width = 0, height = 0 })
   end
-  local text = if days <= 0 then noctalia.tr("account.expired") else noctalia.tr("account.expires_in", { days = days })
+  local text = if days <= 0
+    then noctalia.tr("account.expired")
+    else noctalia.tr("account.expires_in", { days = days })
   return ui.box({ fill = "error", radius = 8, padding = 10 }, {
     ui.label({ text = text, color = "on_error", wrap = true }),
   })
@@ -230,7 +282,11 @@ local function headerSection()
   local selection = currentStatus.relaySelection or { country = "", city = "", hostname = "" }
 
   local glyph = installed and "shield" or "shield-off"
-  local color = if not installed then "error" elseif vpnState == "connected" then "primary" elseif locked then "error" else "on_surface"
+  local color = if not installed
+    then "error"
+    elseif vpnState == "connected" then "primary"
+    elseif locked then "error"
+    else "on_surface"
 
   local stateText
   if not installed then
@@ -265,7 +321,10 @@ local function headerSection()
 
   if currentStatus.multihop then
     if currentStatus.multihopEntry ~= "" then
-      table.insert(details, noctalia.tr("badges.multihop_via", { country = countryName(currentStatus.multihopEntry) }))
+      table.insert(
+        details,
+        noctalia.tr("badges.multihop_via", { country = countryName(currentStatus.multihopEntry) })
+      )
     else
       table.insert(details, noctalia.tr("badges.multihop"))
     end
@@ -314,15 +373,25 @@ local function headerSection()
       then ui.column({ gap = 8, align = "stretch" }, {
         ui.label({ text = noctalia.tr("confirm.lockdown_disconnect"), color = "error" }),
         ui.row({ gap = 8 }, {
-          ui.button({ text = noctalia.tr("confirm.confirm"), variant = "destructive", onClick = "onConfirmDisconnect" }),
-          ui.button({ text = noctalia.tr("confirm.cancel"), variant = "ghost", onClick = "onCancelDisconnect" }),
+          ui.button({
+            text = noctalia.tr("confirm.confirm"),
+            variant = "destructive",
+            onClick = "onConfirmDisconnect",
+          }),
+          ui.button({
+            text = noctalia.tr("confirm.cancel"),
+            variant = "ghost",
+            onClick = "onCancelDisconnect",
+          }),
         }),
       })
       else ui.button({
         text = buttonText,
         variant = if vpnState == "connected" or vpnState == "connecting" then "destructive" else "primary",
         enabled = installed,
-        onClick = if vpnState == "connected" or vpnState == "connecting" then "onDisconnectClick" else "onConnectClick",
+        onClick = if vpnState == "connected" or vpnState == "connecting"
+          then "onDisconnectClick"
+          else "onConnectClick",
       }),
     expiryBanner(),
   })
@@ -338,8 +407,14 @@ local function toggleRow(labelKey, tooltipKey, checked, callback)
   })
 end
 
+local function groupBox(children)
+  return ui.box({ fill = "surface_variant/0.4", radius = 8, padding = 12 }, {
+    ui.column({ gap = 12, align = "stretch", flexGrow = 1 }, children),
+  })
+end
+
 local function togglesSection()
-  return ui.column({ gap = 12, align = "stretch" }, {
+  return groupBox({
     toggleRow("toggles.lockdown", "toggles.lockdown_tooltip", currentStatus.lockdownMode, "onLockdown"),
     toggleRow("toggles.auto_connect", "toggles.auto_connect_tooltip", currentStatus.autoConnect, "onAutoConnect"),
     toggleRow("toggles.lan", "toggles.lan_tooltip", currentStatus.lanSharing == "allow", "onLan"),
@@ -353,15 +428,20 @@ local function relaySection()
     table.insert(rowNodes, relayRow(row))
   end
   if #rowNodes == 0 then
-    table.insert(rowNodes, ui.row({ padding = 12 }, {
-      ui.label({
-        text = if currentStatus.relayListReady then noctalia.tr("relay.no_results") else noctalia.tr("relay.loading"),
-        color = "on_surface_variant",
-      }),
-    }))
+    table.insert(
+      rowNodes,
+      ui.row({ padding = 12 }, {
+        ui.label({
+          text = if currentStatus.relayListReady
+            then noctalia.tr("relay.no_results")
+            else noctalia.tr("relay.loading"),
+          color = "on_surface_variant",
+        }),
+      })
+    )
   end
 
-  return ui.column({ gap = 12, align = "stretch" }, {
+  return groupBox({
     ui.row({ gap = 8, align = "center" }, {
       ui.input({
         key = "relay_search_" .. tostring(searchInputKey),
@@ -370,7 +450,12 @@ local function relaySection()
         onChange = "onSearchChange",
         flexGrow = 1,
       }),
-      ui.button({ glyph = "refresh", variant = "outline", onClick = "onRefreshRelays", tooltip = noctalia.tr("action.refresh_relays") }),
+      ui.button({
+        glyph = "refresh",
+        variant = "outline",
+        onClick = "onRefreshRelays",
+        tooltip = noctalia.tr("action.refresh_relays"),
+      }),
     }),
     ui.button({ text = noctalia.tr("action.auto_select"), variant = "outline", onClick = "onAutoSelect" }),
     ui.scroll({ flexGrow = 1, align = "stretch" }, rowNodes),
@@ -424,16 +509,139 @@ local function advancedSection()
   })
 end
 
+-- ── Anti-censorship ──
+
+local antiCensorshipModes = { "auto", "off", "wireguard-port", "udp2tcp", "shadowsocks", "quic", "lwo" }
+local antiCensorshipModeLabels = {
+  noctalia.tr("anti_censorship.mode_auto"),
+  noctalia.tr("anti_censorship.mode_off"),
+  noctalia.tr("anti_censorship.mode_wireguard_port"),
+  noctalia.tr("anti_censorship.mode_udp2tcp"),
+  noctalia.tr("anti_censorship.mode_shadowsocks"),
+  noctalia.tr("anti_censorship.mode_quic"),
+  noctalia.tr("anti_censorship.mode_lwo"),
+}
+
+local function antiCensorshipModeSelect()
+  local selectedIndex = 0
+  for i, m in ipairs(antiCensorshipModes) do
+    if m == currentStatus.antiCensorship.mode then
+      selectedIndex = i - 1
+      break
+    end
+  end
+  return ui.select({ options = antiCensorshipModeLabels, selectedIndex = selectedIndex, onChange = "onAntiCensorshipMode" })
+end
+
+local function antiCensorshipPortRow(labelKey, method)
+  return ui.column({ gap = 4, align = "stretch" }, {
+    ui.label({ text = noctalia.tr(labelKey), color = "on_surface" }),
+    ui.input({
+      key = "ac_" .. method,
+      value = antiCensorshipInputs[method] or "",
+      placeholder = noctalia.tr("anti_censorship.port_placeholder"),
+      onChange = function(value)
+        antiCensorshipInputs[method] = if type(value) == "string" then value else ""
+      end,
+      onSubmit = function()
+        noctalia.state.set("mullvad.command", { action = "setAntiCensorshipPort", method = method, port = antiCensorshipInputs[method] })
+      end,
+    }),
+  })
+end
+
+local function antiCensorshipSection()
+  return groupBox({
+    ui.label({ text = noctalia.tr("anti_censorship.title"), fontWeight = "bold", color = "on_surface" }),
+    ui.column({ gap = 4, align = "stretch" }, {
+      ui.label({ text = noctalia.tr("anti_censorship.mode"), color = "on_surface" }),
+      antiCensorshipModeSelect(),
+    }),
+    antiCensorshipPortRow("anti_censorship.udp2tcp", "udp2tcp"),
+    antiCensorshipPortRow("anti_censorship.shadowsocks", "shadowsocks"),
+    antiCensorshipPortRow("anti_censorship.wireguard_port", "wireguard-port"),
+    antiCensorshipPortRow("anti_censorship.lwo", "lwo"),
+  })
+end
+
+-- ── DNS ──
+
+local function dnsBlockToggle(labelKey, checked, callback)
+  return ui.row({ gap = 12, align = "center", justify = "space_between" }, {
+    ui.label({ text = noctalia.tr(labelKey), fontWeight = "medium", color = "on_surface" }),
+    ui.toggle({ checked = checked, onChange = callback }),
+  })
+end
+
+local function dnsSection()
+  local dns = currentStatus.dns or {}
+  local showCustom = dns.custom or dnsCustomDraft
+  local children = {
+    ui.label({ text = noctalia.tr("dns.title"), fontWeight = "bold", color = "on_surface" }),
+    ui.row({ gap = 12, align = "center", justify = "space_between" }, {
+      ui.column({ gap = 2, flexGrow = 1 }, {
+        ui.label({ text = noctalia.tr("dns.custom"), fontWeight = "medium", color = "on_surface" }),
+      }),
+      ui.toggle({ checked = showCustom, onChange = "onDnsCustomToggle" }),
+    }),
+  }
+
+  if showCustom then
+    table.insert(children, ui.column({ gap = 8, align = "stretch" }, {
+      ui.input({
+        key = "dns_servers",
+        value = dnsServersInput,
+        placeholder = noctalia.tr("dns.servers_placeholder"),
+        onChange = function(value)
+          dnsServersInput = if type(value) == "string" then value else ""
+        end,
+        onSubmit = "onDnsCustomApply",
+      }),
+      ui.button({ text = noctalia.tr("dns.apply"), variant = "primary", onClick = "onDnsCustomApply" }),
+    }))
+  else
+    table.insert(children, dnsBlockToggle("dns.block_ads", dns.blockAds, "onDnsBlockAds"))
+    table.insert(children, dnsBlockToggle("dns.block_trackers", dns.blockTrackers, "onDnsBlockTrackers"))
+    table.insert(children, dnsBlockToggle("dns.block_malware", dns.blockMalware, "onDnsBlockMalware"))
+    table.insert(children, dnsBlockToggle("dns.block_adult", dns.blockAdult, "onDnsBlockAdult"))
+    table.insert(children, dnsBlockToggle("dns.block_gambling", dns.blockGambling, "onDnsBlockGambling"))
+    table.insert(children, dnsBlockToggle("dns.block_social_media", dns.blockSocialMedia, "onDnsBlockSocialMedia"))
+  end
+
+  return groupBox(children)
+end
+
 -- ── Render ──
 
 function render()
   updateSelectOptions()
+
+  local ac = currentStatus.antiCensorship or {}
+  local acPorts = {
+    udp2tcp = "udp2tcpPort",
+    shadowsocks = "shadowsocksPort",
+    ["wireguard-port"] = "wireguardPort",
+    lwo = "lwoPort",
+  }
+  for method, portKey in pairs(acPorts) do
+    if (antiCensorshipInputs[method] or "") == "" then
+      antiCensorshipInputs[method] = ac[portKey] or ""
+    end
+  end
+
+  local dns = currentStatus.dns or {}
+  if dnsServersInput == "" and (dns.addresses or "") ~= "" then
+    dnsServersInput = dns.addresses
+  end
+
   panel.render(ui.column({ flexGrow = 1, gap = 16, align = "stretch" }, {
     ui.scroll({ flexGrow = 1, gap = 16, align = "stretch" }, {
       headerSection(),
       togglesSection(),
       relaySection(),
       advancedSection(),
+      antiCensorshipSection(),
+      dnsSection(),
     }),
   }))
 end
@@ -536,9 +744,78 @@ function onCancelDisconnect()
   render()
 end
 
+function onAntiCensorshipMode(index, _text)
+  local i = (tonumber(index) or 0) + 1
+  local mode = antiCensorshipModes[i]
+  if mode then
+    noctalia.state.set("mullvad.command", { action = "setAntiCensorshipMode", mode = mode })
+  end
+end
+
+function onDnsCustomToggle(value)
+  local dns = currentStatus.dns or {}
+  if value == "true" then
+    if dnsServersInput == "" then
+      dnsCustomDraft = true
+      render()
+      return
+    end
+    dnsCustomDraft = false
+    noctalia.state.set("mullvad.command", { action = "setDnsCustom", servers = dnsServersInput })
+  else
+    dnsCustomDraft = false
+    noctalia.state.set("mullvad.command", { action = "setDnsDefault", blocks = dns })
+  end
+end
+
+local function dnsBlocks(changedKey, value)
+  local dns = currentStatus.dns or {}
+  local blocks = {
+    blockAds = dns.blockAds,
+    blockTrackers = dns.blockTrackers,
+    blockMalware = dns.blockMalware,
+    blockAdult = dns.blockAdult,
+    blockGambling = dns.blockGambling,
+    blockSocialMedia = dns.blockSocialMedia,
+  }
+  blocks[changedKey] = value == "true"
+  return blocks
+end
+
+function onDnsBlockAds(value)
+  noctalia.state.set("mullvad.command", { action = "setDnsDefault", blocks = dnsBlocks("blockAds", value) })
+end
+
+function onDnsBlockTrackers(value)
+  noctalia.state.set("mullvad.command", { action = "setDnsDefault", blocks = dnsBlocks("blockTrackers", value) })
+end
+
+function onDnsBlockMalware(value)
+  noctalia.state.set("mullvad.command", { action = "setDnsDefault", blocks = dnsBlocks("blockMalware", value) })
+end
+
+function onDnsBlockAdult(value)
+  noctalia.state.set("mullvad.command", { action = "setDnsDefault", blocks = dnsBlocks("blockAdult", value) })
+end
+
+function onDnsBlockGambling(value)
+  noctalia.state.set("mullvad.command", { action = "setDnsDefault", blocks = dnsBlocks("blockGambling", value) })
+end
+
+function onDnsBlockSocialMedia(value)
+  noctalia.state.set("mullvad.command", { action = "setDnsDefault", blocks = dnsBlocks("blockSocialMedia", value) })
+end
+
+function onDnsCustomApply()
+  noctalia.state.set("mullvad.command", { action = "setDnsCustom", servers = dnsServersInput })
+end
+
 noctalia.state.watch("mullvad.status", function(value)
   currentStatus = value
   confirmDisconnect = false
+  if currentStatus.dns and currentStatus.dns.custom then
+    dnsCustomDraft = false
+  end
   render()
 end)
 

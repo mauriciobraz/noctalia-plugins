@@ -37,7 +37,10 @@
   "relay": {
     "search_placeholder": "Buscar país, cidade ou hostname",
     "loading": "Carregando relays…",
-    "no_results": "Nenhum relay encontrado"
+    "no_results": "Nenhum relay encontrado",
+    "expand_tooltip": "Expandir",
+    "menu_title": "Servidores em {country}",
+    "menu_any": "Qualquer servidor"
   },
   "account": {
     "expired": "Conta expirada",
@@ -53,6 +56,34 @@
     "ip_version_any": "Qualquer",
     "ip_version_v4": "IPv4",
     "ip_version_v6": "IPv6"
+  },
+  "anti_censorship": {
+    "title": "Anti-censura",
+    "mode": "Modo",
+    "mode_auto": "Automático",
+    "mode_off": "Desligado",
+    "mode_wireguard_port": "Porta WireGuard",
+    "mode_udp2tcp": "UDP2TCP",
+    "mode_shadowsocks": "Shadowsocks",
+    "mode_quic": "QUIC",
+    "mode_lwo": "LWO",
+    "udp2tcp": "Porta UDP2TCP",
+    "shadowsocks": "Porta Shadowsocks",
+    "wireguard_port": "Porta WireGuard",
+    "lwo": "Porta LWO",
+    "port_placeholder": "qualquer"
+  },
+  "dns": {
+    "title": "DNS",
+    "custom": "Usar DNS personalizado",
+    "servers_placeholder": "1.1.1.1, 8.8.8.8",
+    "apply": "Aplicar",
+    "block_ads": "Bloquear anúncios",
+    "block_trackers": "Bloquear rastreadores",
+    "block_malware": "Bloquear malware",
+    "block_adult": "Bloquear conteúdo adulto",
+    "block_gambling": "Bloquear apostas",
+    "block_social_media": "Bloquear redes sociais"
   },
   "confirm": {
     "lockdown_disconnect": "O modo de bloqueio está ativo. Desconectar mesmo assim?",

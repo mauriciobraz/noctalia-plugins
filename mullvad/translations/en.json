@@ -37,7 +37,10 @@
   "relay": {
     "search_placeholder": "Search country, city or hostname",
     "loading": "Loading relays…",
-    "no_results": "No relays match"
+    "no_results": "No relays match",
+    "expand_tooltip": "Expand",
+    "menu_title": "Servers in {country}",
+    "menu_any": "Any server"
   },
   "account": {
     "expired": "Account expired",
@@ -53,6 +56,34 @@
     "ip_version_any": "Any",
     "ip_version_v4": "IPv4",
     "ip_version_v6": "IPv6"
+  },
+  "anti_censorship": {
+    "title": "Anti-censorship",
+    "mode": "Mode",
+    "mode_auto": "Auto",
+    "mode_off": "Off",
+    "mode_wireguard_port": "WireGuard port",
+    "mode_udp2tcp": "UDP2TCP",
+    "mode_shadowsocks": "Shadowsocks",
+    "mode_quic": "QUIC",
+    "mode_lwo": "LWO",
+    "udp2tcp": "UDP2TCP port",
+    "shadowsocks": "Shadowsocks port",
+    "wireguard_port": "WireGuard port",
+    "lwo": "LWO port",
+    "port_placeholder": "any"
+  },
+  "dns": {
+    "title": "DNS",
+    "custom": "Use custom DNS",
+    "servers_placeholder": "1.1.1.1, 8.8.8.8",
+    "apply": "Apply",
+    "block_ads": "Block ads",
+    "block_trackers": "Block trackers",
+    "block_malware": "Block malware",
+    "block_adult": "Block adult content",
+    "block_gambling": "Block gambling",
+    "block_social_media": "Block social media"
   },
   "confirm": {
     "lockdown_disconnect": "Lockdown mode is on. Disconnect anyway?",

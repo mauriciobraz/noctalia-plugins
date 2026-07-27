@@ -30,6 +30,23 @@ local status = {
   relayList = {},
   relayListReady = false,
   favoriteCountries = {},
+  antiCensorship = {
+    mode = "auto",
+    udp2tcpPort = "any",
+    shadowsocksPort = "any",
+    wireguardPort = "any",
+    lwoPort = "any",
+  },
+  dns = {
+    custom = false,
+    addresses = "",
+    blockAds = false,
+    blockTrackers = false,
+    blockMalware = false,
+    blockAdult = false,
+    blockGambling = false,
+    blockSocialMedia = false,
+  },
 }
 
 local function cfg(key)
@@ -71,6 +88,8 @@ local function publish()
     relayList = status.relayList,
     relayListReady = status.relayListReady,
     favoriteCountries = status.favoriteCountries,
+    antiCensorship = status.antiCensorship,
+    dns = status.dns,
   })
 end
 
@@ -387,6 +406,181 @@ local function refreshAccount()
   end, 10000)
 end
 
+-- ── Anti-censorship ──
+
+local function parseAntiCensorship(stdout)
+  local out = {
+    mode = "auto",
+    udp2tcpPort = "any",
+    shadowsocksPort = "any",
+    wireguardPort = "any",
+    lwoPort = "any",
+  }
+  for rawLine in (stdout or ""):gmatch("[^\r\n]+") do
+    local line = trim(rawLine)
+    local mode = line:match("^mode:%s+(%S+)")
+    if mode then
+      out.mode = mode:lower()
+      continue
+    end
+    local port = line:match("^udp2tcp settings:%s+(.+)$")
+    if port then
+      out.udp2tcpPort = port:lower():find("any", 1, true) and "any" or (port:match("(%d+)") or "off")
+      continue
+    end
+    port = line:match("^shadowsocks settings:%s+(.+)$")
+    if port then
+      out.shadowsocksPort = port:lower():find("any", 1, true) and "any" or (port:match("(%d+)") or "off")
+      continue
+    end
+    port = line:match("^wireguard%-port settings:%s+(.+)$")
+    if port then
+      out.wireguardPort = port:lower():find("any", 1, true) and "any" or (port:match("(%d+)") or "off")
+      continue
+    end
+    port = line:match("^lwo settings:%s+(.+)$")
+    if port then
+      out.lwoPort = port:lower():find("any", 1, true) and "any" or (port:match("(%d+)") or "off")
+    end
+  end
+  return out
+end
+
+local function refreshAntiCensorship()
+  if not status.installed then
+    return
+  end
+  runMullvad({ "anti-censorship", "get" }, function(result)
+    if result == nil or result.exitCode ~= 0 then
+      return
+    end
+    status.antiCensorship = parseAntiCensorship(result.stdout)
+    publish()
+  end, 10000)
+end
+
+local function setAntiCensorshipMode(mode)
+  if not status.installed or not mode or mode == "" then
+    return
+  end
+  runMullvad({ "anti-censorship", "set", "mode", mode }, refreshAntiCensorship, 10000)
+end
+
+local function setAntiCensorshipPort(method, port)
+  if not status.installed or not method or method == "" then
+    return
+  end
+  local value = port or "any"
+  runMullvad({ "anti-censorship", "set", method, "--port", value }, refreshAntiCensorship, 10000)
+end
+
+-- ── DNS ──
+
+local function parseDns(stdout)
+  local out = {
+    custom = false,
+    addresses = "",
+    blockAds = false,
+    blockTrackers = false,
+    blockMalware = false,
+    blockAdult = false,
+    blockGambling = false,
+    blockSocialMedia = false,
+  }
+  for rawLine in (stdout or ""):gmatch("[^\r\n]+") do
+    local line = trim(rawLine):lower()
+    if line:match("^custom dns:%s+yes") then
+      out.custom = true
+      continue
+    end
+    if line:match("^custom dns:%s+no") then
+      out.custom = false
+      continue
+    end
+    local addresses = line:match("^addresses:%s+(.+)$")
+    if addresses then
+      out.addresses = addresses
+      continue
+    end
+    if line:match("^block ads:%s+true") then
+      out.blockAds = true
+    elseif line:match("^block ads:%s+false") then
+      out.blockAds = false
+    end
+    if line:match("^block trackers:%s+true") then
+      out.blockTrackers = true
+    elseif line:match("^block trackers:%s+false") then
+      out.blockTrackers = false
+    end
+    if line:match("^block malware:%s+true") then
+      out.blockMalware = true
+    elseif line:match("^block malware:%s+false") then
+      out.blockMalware = false
+    end
+    if line:match("^block adult content:%s+true") then
+      out.blockAdult = true
+    elseif line:match("^block adult content:%s+false") then
+      out.blockAdult = false
+    end
+    if line:match("^block gambling:%s+true") then
+      out.blockGambling = true
+    elseif line:match("^block gambling:%s+false") then
+      out.blockGambling = false
+    end
+    if line:match("^block social media:%s+true") then
+      out.blockSocialMedia = true
+    elseif line:match("^block social media:%s+false") then
+      out.blockSocialMedia = false
+    end
+  end
+  return out
+end
+
+local function refreshDns()
+  if not status.installed then
+    return
+  end
+  runMullvad({ "dns", "get" }, function(result)
+    if result == nil or result.exitCode ~= 0 then
+      return
+    end
+    status.dns = parseDns(result.stdout)
+    publish()
+  end, 10000)
+end
+
+local function setDnsDefault(blocks)
+  if not status.installed then
+    return
+  end
+  local args = { "dns", "set", "default" }
+  if blocks.blockAds then table.insert(args, "--block-ads") end
+  if blocks.blockTrackers then table.insert(args, "--block-trackers") end
+  if blocks.blockMalware then table.insert(args, "--block-malware") end
+  if blocks.blockAdult then table.insert(args, "--block-adult-content") end
+  if blocks.blockGambling then table.insert(args, "--block-gambling") end
+  if blocks.blockSocialMedia then table.insert(args, "--block-social-media") end
+  runMullvad(args, refreshDns, 10000)
+end
+
+local function setDnsCustom(servers)
+  if not status.installed then
+    return
+  end
+  if type(servers) ~= "string" or servers == "" then
+    setDnsDefault({})
+    return
+  end
+  local args = { "dns", "set", "custom" }
+  for part in servers:gmatch("[^,]+") do
+    local ip = trim(part)
+    if ip ~= "" then
+      table.insert(args, ip)
+    end
+  end
+  runMullvad(args, refreshDns, 10000)
+end
+
 -- ── Actions ──
 
 local function notifyLockdownChange(active)
@@ -516,6 +710,8 @@ local function refreshAll()
   refreshTogglesState()
   refreshAccount()
   refreshRelayList()
+  refreshAntiCensorship()
+  refreshDns()
 end
 
 -- ── Commands from UI ──
@@ -547,6 +743,14 @@ noctalia.state.watch("mullvad.command", function(cmd)
     setMultihopEntry(cmd.country)
   elseif action == "setIpVersion" then
     setIpVersion(cmd.version)
+  elseif action == "setAntiCensorshipMode" then
+    setAntiCensorshipMode(cmd.mode)
+  elseif action == "setAntiCensorshipPort" then
+    setAntiCensorshipPort(cmd.method, cmd.port)
+  elseif action == "setDnsDefault" then
+    setDnsDefault(cmd.blocks)
+  elseif action == "setDnsCustom" then
+    setDnsCustom(cmd.servers)
   elseif action == "refresh" then
     refreshAll()
   elseif action == "refreshRelays" then
@@ -571,6 +775,8 @@ function update()
   if tickCount % TOGGLES_INTERVAL_TICKS == 0 then
     refreshTogglesState()
     refreshRelaySelection()
+    refreshAntiCensorship()
+    refreshDns()
   end
   if tickCount % ACCOUNT_INTERVAL_TICKS == 0 then
     refreshAccount()

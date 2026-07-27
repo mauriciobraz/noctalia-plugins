@@ -2,7 +2,7 @@
 
 id = "noctalia/mullvad"
 name = "Mullvad VPN"
-version = "1.0.0"
+version = "1.1.0"
 plugin_api = 9
 author = "noctalia"
 license = "MIT"
@@ -53,7 +53,7 @@ key = "click_action"
 type = "select"
 label_key = "settings.click_action.label"
 description_key = "settings.click_action.description"
-default = "toggle"
+default = "panel"
 options = [
   { value = "toggle", label_key = "settings.click_action_toggle.label" },
   { value = "panel", label_key = "settings.click_action_panel.label" },
@@ -98,8 +98,18 @@ id = "panel"
 entry = "panel.luau"
 width = 420
 height = 560
-placement = "floating"
-position = "center"
+placement = "attached"
+position = "auto"
+open_near_click = true
+
+[[panel]]
+id = "relay-menu"
+entry = "relay-menu.luau"
+width = 320
+height = 420
+placement = "attached"
+position = "auto"
+open_near_click = true
 
 [[service]]
 id = "service"
